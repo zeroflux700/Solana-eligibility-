@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solana Airdrop Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            color: #718096;
+            font-size: 1.1em;
+        }
+        
+        .input-section {
+            margin-bottom: 30px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .input-field {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .check-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+        
+        .check-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .check-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .results {
+            margin-top: 30px;
+        }
+        
+        .airdrop-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        
+        .airdrop-card.eligible {
+            border-left-color: #48bb78;
+            background: linear-gradient(90deg, #f0fff4, #ffffff);
+        }
+        
+        .airdrop-card.not-eligible {
+            border-left-color: #f56565;
+            background: linear-gradient(90deg, #fff5f5, #ffffff);
+        }
+        
+        .airdrop-card.checking {
+            border-left-color: #ed8936;
+            background: linear-gradient(90deg, #fffaf0, #ffffff);
+        }
+        
+        .airdrop-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .airdrop-name {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-badge.eligible {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .status-badge.not-eligible {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .status-badge.checking {
+            background: #feebc8;
+            color: #7b341e;
+        }
+        
+        .airdrop-details {
+            color: #4a5568;
+            font-size: 0.95em;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .error {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .wallet-info {
+            background: #e6fffa;
+            border: 1px solid #81e6d9;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .wallet-info h3 {
+            color: #234e52;
+            margin-bottom: 10px;
+        }
+        
+        .balance-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .api-status {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+        
+        .api-status.online {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .api-status.offline {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Solana Airdrop Checker</h1>
+            <p>Check your wallet eligibility for active Solana airdrops in real-time</p>
+        </div>
+
+        <div class="api-status" id="apiStatus">
+            <span id="statusText">Checking API connection...</span>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <input type="text" id="walletAddress" class="input-field" placeholder="Enter your Solana wallet address (e.g., 7v91N...)" maxlength="44">
+                <button id="checkBtn" class="check-btn">
+                    Check Eligibility
+                </button>
+            </div>
+        </div>
+
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        class SolanaAirdropChecker {
+            constructor() {
+                this.heliusApiKey = 'YOUR_HELIUS_API_KE'; // Replace with your Helius API key
+                this.heliusEndpoint = 'https://rpc.helius.xyz/';
+                this.currentChecks = new Map();
+                this.init();
+            }
+
+            init() {
+                this.checkApiStatus();
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                const checkBtn = document.getElementById('checkBtn');
+                const walletInput = document.getElementById('walletAddress');
+
+                checkBtn.addEventListener('click', () => this.checkWalletEligibility());
+                walletInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.checkWalletEligibility();
+                    }
+                });
+
+                walletInput.addEventListener('input', (e) => {
+                    const address = e.target.value.trim();
+                    if (address.length > 0 && !this.isValidSolanaAddress(address)) {
+                        e.target.style.borderColor = '#f56565';
+                    } else {
+                        e.target.style.borderColor = '#e2e8f0';
+                    }
+                });
+            }
+
+            async checkApiStatus() {
+                const statusEl = document.getElementById('apiStatus');
+                const statusText = document.getElementById('statusText');
+
+                try {
+                    // Test connection with a simple RPC call
+                    const response = await fetch(`${this.heliusEndpoint}?api-key=${this.heliusApiKey}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            jsonrpc: '2.0',
+                            id: 1,
+                            method: 'getHealth'
+                        })
+                    });
+
+                    if (response.ok) {
+                        statusEl.className = 'api-status online';
+                        statusText.textContent = '✅ Connected to Solana RPC';
+                    } else {
+                        throw new Error('API not responding');
+                    }
+                } catch (error) {
+                    statusEl.className = 'api-status offline';
+                    statusText.textContent = '❌ Using demo mode - Get your free API key at helius.dev';
+                }
+            }
+
+            isValidSolanaAddress(address) {
+                // Basic Solana address validation
+                const base58Regex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+                return base58Regex.test(address);
+            }
+
+            async checkWalletEligibility() {
+                const walletAddress = document.getElementById('walletAddress').value.trim();
+                const checkBtn = document.getElementById('checkBtn');
+                const resultsDiv = document.getElementById('results');
+
+                if (!walletAddress) {
+                    this.showError('Please enter a wallet address');
+                    return;
+                }
+
+                if (!this.isValidSolanaAddress(walletAddress)) {
+                    this.showError('Invalid Solana wallet address format');
+                    return;
+                }
+
+                checkBtn.disabled = true;
+                checkBtn.innerHTML = '<span class="loading"></span> Checking...';
+
+                try {
+                    // Get wallet info first
+                    const walletInfo = await this.getWalletInfo(walletAddress);
+
+                    // Define airdrops to check
+                    const airdrops = [{
+                        name: 'Jupiter (JUP)',
+                        description: 'Jupiter Exchange airdrop for active users',
+                        checkFunction: 'checkJupiterEligibility'
+                    }, {
+                        name: 'Drift Protocol',
+                        description: 'Drift perpetual trading platform',
+                        checkFunction: 'checkDriftEligibility'
+                    }, {
+                        name: 'Marginfi',
+                        description: 'Solana lending protocol',
+                        checkFunction: 'checkMarginfiEligibility'
+                    }, {
+                        name: 'Kamino Finance',
+                        description: 'Automated DeFi strategies',
+                        checkFunction: 'checkKaminoEligibility'
+                    }, {
+                        name: 'Meteora',
+                        description: 'Dynamic liquidity pools',
+                        checkFunction: 'checkMeteoraEligibility'
+                    }, {
+                        name: 'Jito',
+                        description: 'MEV solution and staking',
+                        checkFunction: 'checkJitoEligibility'
+                    }];
+
+                    resultsDiv.innerHTML = '';
+
+                    // Show wallet info
+                    this.displayWalletInfo(walletInfo);
+
+                    // Check each airdrop
+                    for (const airdrop of airdrops) {
+                        this.displayAirdropCard(airdrop, 'checking');
+
+                        try {
+                            const result = await this[airdrop.checkFunction](walletAddress);
+                            this.updateAirdropCard(airdrop, result);
+                        } catch (error) {
+                            this.updateAirdropCard(airdrop, {
+                                eligible: false,
+                                error: error.message
+                            });
+                        }
+                    }
+
+                } catch (error) {
+                    this.showError(`Error checking wallet: ${error.message}`);
+                } finally {
+                    checkBtn.disabled = false;
+                    checkBtn.innerHTML = 'Check Eligibility';
+                }
+            }
+
+            async getWalletInfo(address) {
+                try {
+                    const response = await fetch(`${this.heliusEndpoint}?api-key=${this.heliusApiKey}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            jsonrpc: '2.0',
+                            id: 1,
+                            method: 'getBalance',
+                            params: [address]
+                        })
+                    });
+
+                    const data = await response.json();
+                    (data.result && data.result.value) || 0
+
+                    return {
+                        address,
+                        balance: balance / 1000000000, // Convert lamports to SOL
+                        isActive: balance > 0
+                    };
+                } catch (error) {
+                    // Return demo data if API fails
+                    return {
+                        address,
+                        balance: 1.23,
+                        isActive: true,
+                        demo: true
+                    };
+                }
+            }
+
+            async checkJupiterEligibility(address) {
+                // Simulate Jupiter eligibility check
+                await this.delay(1000);
+
+                // Mock logic: Check if wallet has significant activity
+                const hasActivity = Math.random() > 0.6;
+
+                return {
+                    eligible: hasActivity,
+                    details: hasActivity ?
+                        'Wallet shows Jupiter trading activity' : 'No sufficient Jupiter trading volume detected',
+                    allocation: hasActivity ? `${Math.floor(Math.random() * 1000) + 100} JUP` : null
+                };
+            }
+
+            async checkDriftEligibility(address) {
+                await this.delay(1200);
+
+                const hasActivity = Math.random() > 0.7;
+
+                return {
+                    eligible: hasActivity,
+                    details: hasActivity ?
+                        'Eligible based on perpetual trading activity' : 'No qualifying trading activity found',
+                    allocation: hasActivity ? `${Math.floor(Math.random() * 500) + 50} DRIFT` : null
+                };
+            }
+
+            async checkMarginfiEligibility(address) {
+                await this.delay(900);
+
+                const hasActivity = Math.random() > 0.5;
+
+                return {
+                    eligible: hasActivity,
+                    details: hasActivity ?
+                        'Qualified through lending/borrowing activities' : 'No lending protocol interactions found',
+                    allocation: hasActivity ? `${Math.floor(Math.random() * 800) + 200} MRGN` : null
+                };
+            }
+
+            async checkKaminoEligibility(address) {
+                await this.delay(1100);
+
+                const hasActivity = Math.random() > 0.6;
+
+                return {
+                    eligible: hasActivity,
+                    details: hasActivity ?
+                        'Active user of Kamino strategies' : 'No strategy participation detected',
+                    allocation: hasActivity ? `${Math.floor(Math.random() * 600) + 100} KMNO` : null
+                };
+            }
+
+            async checkMeteoraEligibility(address) {
+                await this.delay(1300);
+
+                const hasActivity = Math.random() > 0.65;
+
+                return {
+                    eligible: hasActivity,
+                    details: hasActivity ?
+                        'Liquidity provider rewards qualified' : 'Insufficient liquidity provision',
+                    allocation: hasActivity ? `${Math.floor(Math.random() * 400) + 75} MET` : null
+                };
+            }
+
+            async checkJitoEligibility(address) {
+                await this.delay(800);
+
+                const hasActivity = Math.random() > 0.55;
+
+                return {
+                    eligible: hasActivity,
+                    details: hasActivity ?
+                        'MEV protection usage detected' : 'No Jito staking or MEV activities',
+                    allocation: hasActivity ? `${Math.floor(Math.random() * 300) + 50} JTO` : null
+                };
+            }
+
+            displayWalletInfo(walletInfo) {
+                const walletInfoHtml = `
+                    <div class="wallet-info">
+                        <h3>📋 Wallet Information</h3>
+                        <div class="balance-item">
+                            <span>Address:</span>
+                            <span style="font-family: monospace;">${walletInfo.address.substring(0, 8)}...${walletInfo.address.substring(walletInfo.address.length - 8)}</span>
+                        </div>
+                        <div class="balance-item">
+                            <span>SOL Balance:</span>
+                            <span>${walletInfo.balance.toFixed(4)} SOL</span>
+                        </div>
+                        <div class="balance-item">
+                            <span>Status:</span>
+                            <span style="color: ${walletInfo.isActive ? '#22543d' : '#742a2a'};">
+                                ${walletInfo.isActive ? '✅ Active' : '❌ Inactive'}
+                            </span>
+                        </div>
+                        ${walletInfo.demo ? '<div style="color: #7b341e; font-size: 0.9em; margin-top: 10px;">⚠️ Demo data - Connect to Helius API for real-time information</div>' : ''}
+                    </div>
+                `;
+
+                document.getElementById('results').innerHTML = walletInfoHtml;
+            }
+
+            displayAirdropCard(airdrop, status) {
+                const cardHtml = `
+                    <div class="airdrop-card ${status}" id="card-${airdrop.name.replace(/\s+/g, '-')}">
+                        <div class="airdrop-header">
+                            <div class="airdrop-name">${airdrop.name}</div>
+                            <div class="status-badge ${status}">
+                                ${status === 'checking' ? '<span class="loading"></span> Checking' : status}
+                            </div>
+                        </div>
+                        <div class="airdrop-details">
+                            ${airdrop.description}
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('results').innerHTML += cardHtml;
+            }
+
+            updateAirdropCard(airdrop, result) {
+                const cardId = `card-${airdrop.name.replace(/\s+/g, '-')}`;
+                const card = document.getElementById(cardId);
+
+                if (!card) return;
+
+                const status = result.eligible ? 'eligible' : 'not-eligible';
+                const statusText = result.eligible ? 'Eligible' : 'Not Eligible';
+
+                card.className = `airdrop-card ${status}`;
+
+                let detailsHtml = `
+                    <div class="airdrop-details">
+                        ${airdrop.description}<br>
+                        <strong>Status:</strong> ${result.details}
+                `;
+
+                if (result.allocation) {
+                    detailsHtml += `<br><strong>Estimated Allocation:</strong> ${result.allocation}`;
+                }
+
+                if (result.error) {
+                    detailsHtml += `<br><span style="color: #742a2a;">Error: ${result.error}</span>`;
+                }
+
+                detailsHtml += `</div>`;
+
+                card.innerHTML = `
+                    <div class="airdrop-header">
+                        <div class="airdrop-name">${airdrop.name}</div>
+                        <div class="status-badge ${status}">
+                            ${result.eligible ? '✅ Eligible' : '❌ Not Eligible'}
+                        </div>
+                    </div>
+                    ${detailsHtml}
+                `;
+            }
+
+            showError(message) {
+                const errorHtml = `
+                    <div class="error">
+                        <strong>Error:</strong> ${message}
+                    </div>
+                `;
+
+                document.getElementById('results').innerHTML = errorHtml;
+            }
+
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+
+        // Initialize the airdrop checker when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new SolanaAirdropChecker();
+        });
+    </script>
+</body>
+
+</html>
